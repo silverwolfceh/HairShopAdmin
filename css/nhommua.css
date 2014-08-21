@@ -1,0 +1,90 @@
+.small-box-white {
+	width: 300px;
+	float:left;
+	margin: 0px 9px 15px 2px;
+	background-color: #fff;		
+	border-radius:9px;
+	-moz-border-radius:9px;	
+	-webkit-border-radius:9px;
+	//padding: 18px 16px 20px 16px;
+	padding: 3px 10px 20px 10px;
+	border:1px solid #c4c4c4;
+	box-shadow:10px 10px 8px 5px #656565;
+	-moz-box-shadow:0 2px 8px #656565;
+	-webkit-box-shadow:0 2px 8px #656565;
+	position:relative;
+}
+.small-box-white h3,.small-box-white h1{	
+	font-size: 19px;	
+	color: #0f5f92;
+	height: 22px;
+	overflow: hidden;
+	position:relative;
+	z-index:12;
+}
+.small-box-white h3 a,.small-box-white h1 a{	
+	font-size: 18px;	
+	color: #0095DA;	
+}
+.small-box-white p{
+	line-height: 20px;
+	font-size:13px;
+	color: #555555;	
+}
+.freeship {background: url("http://www.mjgroup.com.vn/images_v2/freeship_new.png") no-repeat scroll 0 0 transparent;bottom: 65px;display: block;height: 70px;left: 20px;position: absolute;width: 97px;z-index: 2;}
+.giaovoucher {background: url("http://www.mjgroup.com.vn/images_v2/icon-giao-voucher.png") no-repeat scroll 0 0 transparent;bottom: 65px;display: block;height: 49px;left: 20px;position: absolute; width: 63px;z-index: 2;}
+.small-box-text {
+	height: 65px;
+	overflow: hidden;
+	//margin-bottom: 19px;
+}
+.small-box-button {
+	float: left;
+	width: 117px;
+	position:relative;
+	z-index:12;
+}
+.small-box-button .view-button {	
+	background: url(http://www.mjgroup.com.vn/images_v2/btn-xem-small.png) no-repeat 0 0;
+	width: 117px;
+	height: 52px;
+}
+.small-box-button .view-button-en {	
+	background: url(http://www.mjgroup.com.vn/images_v2/btn-xem-small-en.png) no-repeat 0 0;
+	width: 117px;
+	height: 52px;
+	display:block;
+}
+.small-box-sale {
+	width: 160px;
+	float: left;
+	margin-top:-3px;
+}
+.small-box-sale span{	
+	display: block;
+	color: #555555;
+	font-size: 11px;
+	line-height:13px;	
+}
+.small-box-sale span.number{	
+	font-size: 16px;
+	font-weight:700;	
+}
+.small-box-sale p{
+	color: #ff6600;
+	font-size: 23px;
+	font-weight: 700;
+	text-align: center;
+	padding-bottom: 7px;
+	line-height:23px;
+}
+.small-box-sale p span{	
+	font-size: 9px;	
+	color: #ff6600;
+	display: inline;
+}
+/* EXAMPLE
+<section> <div class='small-box-white'>    <h1><a href='http://www.nhommua.com/tp-ho-chi-minh/nha-hang/nha-hang-han-quoc-lau-lau-7F050204067C.html' name='Nhà Hàng Hàn Qu?c L?u L?u	' title='Nhà Hàng Hàn Qu?c L?u L?u	' >Nhà Hàng Hàn Qu?c L?u L?u	</a></h1>   <div class='small-box-img'>    <a href='http://www.nhommua.com/tp-ho-chi-minh/nha-hang/nha-hang-han-quoc-lau-lau-7F050204067C.html' name='Nhà Hàng Hàn Qu?c L?u L?u	'><img src='http://www.nhommua.net/Upload/5342/268x166/Nha-Hang-Han-Quoc-Lau-Lau_201254155431806.jpg' width='268' height='166' alt='Nhà Hàng Hàn Qu?c L?u L?u	' title='Nhà Hàng Hàn Qu?c L?u L?u	'/><span class='giaovoucher'></span></a><i></i>   </div>   <div class='small-box-text'>       	<p>
+
+	Thu?ng th?c huong v? d?c s?c c?a ?m th?c x? Kim Chi t?i NH&Agrave; H&Agrave;NG H&Agrave;N QU?C L?U L?U. Voucher tr? gi&aacute; 100.000VNÐ, gi?m 50%, ch? c&ograve;n... </p>   </div>  <div class='small-box-button'>      <a href='http://www.nhommua.com/tp-ho-chi-minh/nha-hang/nha-hang-han-quoc-lau-lau-7F050204067C.html' name='Nhà Hàng Hàn Qu?c L?u L?u	' title='Nhà Hàng Hàn Qu?c L?u L?u	' class='view-button'></a>   </div>    <div class='small-box-sale'>      <p>50.000<span> VNÐ</span></p>      <div class='small-box-save'>          <span class='number'>50%</span>         <span>ti?t ki?m</span>      </div>     <div class='small-box-price'>          <span class='number' id='Time_CountDown_5342'>3 ngày</span>         <span>th?i gian còn l?i</span>      </div>   </div> 	<div class='clear'></div>        </div></section>
+*/
