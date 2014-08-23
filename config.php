@@ -6,6 +6,7 @@
     $dbuser='root';
     $dbpass='';
     $dbname='hottoc';
+    $resetpassword = '123456';
     $link=@mysql_connect($dbhost,$dbuser,$dbpass) or die('Couldn\"t connect to database');
     $db=mysql_select_db($dbname,$link);
     mysql_query("SET NAMES 'UTF8'");

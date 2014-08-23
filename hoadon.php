@@ -7,6 +7,7 @@
 		private $action;
 		private $mahd;
 		private $chitiet;
+		private $chitiet_ck;
 		public $khachhang;
 		private $chietkhau;
 		public function __construct($maso = -1)
@@ -24,15 +25,65 @@
 				return hoadon::loadAllByCreator(func_get_arg(0));
 			}
 		}
+		public static function loadOnCondition()
+		{
+			switch (func_num_args())
+			{
+				case 0:
+					return hoadon::loadAllNoCondition();
+					break;
+				case 1:
+					return hoadon::loadAllByYear(func_get_arg(0));
+					break;
+				case 2:
+					return hoadon::loadAllByMonth(func_get_arg(0),func_get_arg(1));
+					break;
+				case 3: 
+					return hoadon::loadAllByDay(func_get_arg(0),func_get_arg(1),func_get_arg(2));
+					break;
+				case 4:
+					return hoadon::loadAllByCreator(func_get_arg(0));
+					break;
+				case 6:
+					return hoadon::loadAllByRange(func_get_arg(0),func_get_arg(1),func_get_arg(2),func_get_arg(3),func_get_arg(4),func_get_arg(5));
+				default:
+					return null;
+					break;
+			}
+		}
 		public static function loadAllNoCondition()
 		{
-			$sql = "SELECT * FROM hoadon";
+			$sql = "SELECT * FROM hoadon ORDER BY ngaylap DESC";
 			$rs = mysql_query($sql);
 			return $rs;
 		}
 		public static function loadAllByCreator($nguoilap)
 		{
-			$sql = "SELECT * FROM hoadon WHERE nguoilap = '".$nguoilap."';";
+			$sql = "SELECT * FROM hoadon WHERE nguoilap = '".$nguoilap."' ORDER BY ngaylap DESC;";
+			$rs = mysql_query($sql);
+			return $rs;
+		}
+		public static function loadAllByYear($Y)
+		{
+			$sql = "SELECT * FROM hoadon WHERE ngaylap LIKE '".$Y."-%' ORDER BY ngaylap DESC;";
+			$rs = mysql_query($sql);
+			return $rs;
+		}
+		public static function loadAllByMonth($Y,$M)
+		{
+			$sql = "SELECT * FROM hoadon WHERE ngaylap LIKE '".$Y."-".$M."-%' ORDER BY ngaylap DESC;";
+			$rs = mysql_query($sql);
+			return $rs;
+		}
+		public static function loadAllByDay($Y,$M,$D)
+		{
+			$sql = "SELECT * FROM hoadon WHERE ngaylap LIKE '".$Y."-".$M."-".$D."' ORDER BY ngaylap DESC;";
+			$rs = mysql_query($sql);
+			return $rs;
+		}
+		public static function loadAllByRange($Y,$M,$D,$Y1, $M1,$D1)
+		{
+			$sql = "SELECT * FROM hoadon WHERE ngaylap >= '".$Y."-".$M."-".$D."' AND ngaylap <= '".$Y1."-".$M1."-".$D1."'  ORDER BY ngaylap DESC;";
 			$rs = mysql_query($sql);
 			return $rs;
 		}
@@ -40,9 +91,10 @@
 		{
 			return $this->mahd;
 		}
-		public function addChitiet($item,$price)
+		public function addChitiet($item,$price,$discount = 0)
 		{
 			$this->chitiet[$item] = $price;
+			$this->chitiet_ck[$item] = $discount;
 		}
 		public function addChitiet1($mix)
 		{
@@ -64,7 +116,7 @@
 				$obj = new chitiet($this->mahd);
 				foreach($this->chitiet as $k => $val)
 				{
-					$obj->addItem($k,$val);
+					$obj->addItem($k,$val,$this->chitiet_ck[$k]);
 					$obj->save();
 				}
 				$total = $obj->getTotal();

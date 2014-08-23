@@ -33,7 +33,7 @@
 		document.getElementById("addsp").innerHTML = k;
 
 	}
-	function savedata()
+	function savedata1()
 	{
 		var kh = document.getElementById("khachhang").value;
 		var ct = document.getElementById("addsp").innerHTML;
@@ -50,6 +50,44 @@
     		}
     	});
 	}
+	function savedata()
+	{
+		var rows = document.getElementsByName('sanpham[]');
+		var ids = "";
+		var prices = "";
+		var cksps = "";
+		var kh = "";
+		for (var i = 0, l = rows.length; i < l; i++)
+		{
+        	if (rows[i].checked)
+        	{
+        		var spid = rows[i].value;
+        		var price = document.getElementById("gia_sp_" + spid).value;
+        		var cksp = document.getElementById("gia_ck_sp_" + spid).value;
+
+        		ids = ids + spid + ":";
+        		prices = prices + price + ":";
+        		cksps = cksps + cksp + ":";
+        	}
+        }
+        ids = ids.substring(0,ids.length - 1);
+        prices = prices.substring(0,prices.length - 1);
+        cksps = cksps.substring(0,cksps.length - 1);
+        document.getElementById("save").disabled = true;
+        document.getElementById("save").value="Processing...";
+        jQuery.ajax({
+    		type: "POST",
+    		url: "process.php",
+    		data: {'optcode': 'luu-hoa-don', 'khachhang' : kh, 'prices' : prices,'ids' : ids,'cks': cksps },
+    		async:false,
+    		success: function(reponse) {
+    			document.getElementById("save").value="Printing";
+    			mahd = reponse;
+    			printdata();
+    			document.location.href="index.php?arg1=xem-hoa-don"
+    		}
+    	});
+    }
 	function login()
 	{
 		var us = document.getElementById("username").value;
@@ -93,6 +131,39 @@
     		}
     	});
 	}
+	function updatePassword()
+	{
+		if(document.getElementById('newpass').value == '')
+		{
+			alert('Password không được trống');
+			return false;
+		}
+		if(document.getElementById('newpass').value != document.getElementById('newpass1').value)
+		{
+			alert('Password nhập lại không đúng');
+			return false;
+		}
+		var usr = document.getElementById('username').value;
+		var newpass = document.getElementById('newpass').value;
+		jQuery.ajax({
+    		type: "POST",
+    		url: "process.php",
+    		data: {'optcode': 'update-password', 'username' : usr, 'password': newpass},
+    		async:false,
+    		success: function(reponse) {
+    			if(reponse.indexOf("ok") != -1)
+    			{
+    				alert('Đổi mật khẩu thành công');
+    				document.location.href='?arg1=log-out';
+    			}
+    			else
+    			{
+    				alert('Đổi mật khẩu thất bại');
+    			}
+    			
+    		}
+    	});
+	}
 	</script>
 	<title>
 	 Quản lý hớt tóc
@@ -124,8 +195,15 @@
         <a href="?arg1=xem-hoa-don">Danh sách hóa đơn</a>
 
         <span>Người dùng <?php echo $_SESSION['uname']; ?></span>
-        <a href="?arg1=log-out">Logout</a>   
-        <a href="admin.php">Admin</a>   
+        <a href="?arg1=update-pass">Change password</a>
+        <a href="?arg1=log-out">Logout</a>
+        <?php
+        	if($_SESSION['uname'] == 'admin')
+	        {
+	        	echo '<a href="admin.php">Admin</a>';
+	        }   
+	     ?>
+        
      
 <?php
 	}
@@ -153,22 +231,43 @@
 			</table>
 			<center><h4> Dịch vụ sử dụng </h4></center>
 			<?php
-				require_once('item.php');
-				$rs = item::loadAllItem();
-				echo "<select name='items' id='items'>";
-				while($r = mysql_fetch_array($rs))
+				if(defined("_USE_COMBOBOX"))
 				{
-					echo "<option value='".$r['masp']."'>".$r['tensp'].":::".$r['giamacdinh']."</option>";
+					require_once('item.php');
+					$rs = item::loadAllItem();
+					echo "<select name='items' id='items'>";
+					while($r = mysql_fetch_array($rs))
+					{
+						echo "<option value='".$r['masp']."'>".$r['tensp'].":::".$r['giamacdinh']."</option>";
+					}
+					echo "</select>";
+					echo "<input type='text' name='actual' id='actual' placeholder='Giá thực' />";
+					echo "<input type='button' name='add' id='add' value='Add' onclick='adddata()' />";
+					echo "<div id='addsp' style='align:right'></div>";
 				}
-				echo "</select>";
-				echo "<input type='text' name='actual' id='actual' placeholder='Giá thực' />";
-				echo "<input type='button' name='add' id='add' value='Add' onclick='adddata()' />";
+				else // USE_CHECKBOX
+				{
+					require_once('item.php');
+					$rs = item::loadAllItem();
+					echo "<table width=60%>";
+					echo "<tr><th align='left'>Dịch vụ</th><th align='right'>Giá</th><th align='right'>Giá thực</th><th>Sử dụng</th></tr>";
+					while($r = mysql_fetch_array($rs))
+					{
+						echo "<tr>";
+						echo "<td align='left'>".$r['tensp']."</td>";
+						echo "<td align='right'>".$r['giamacdinh']."</td>";
+						echo "<td align='right'><input type='hidden' name='gia_ck_sp_".$r['masp']."' id='gia_ck_sp_".$r['masp']."' value='".$r['chietkhau']."' /> <input name='gia_sp_".$r['masp']."' id='gia_sp_".$r['masp']."' type='text' value='".$r['giamacdinh']."' style='text-align:right' /></td>";
+						echo "<td align='center'><input type='checkbox' name='sanpham[]' id='sp_".$r['masp']."' value='".$r['masp']."' /> </td>";
+						echo "</tr>";
+					}
+					echo "</table>";
+					echo "<br />";
+				}
+				
 			?>
-			<div id='addsp' style='align:right'>
-			</div>
-			<input type='button' name='save' id='save' value='Save' onclick='savedata()' />
+			<input type='button' name='save' id='save' value='Lưu và In' onclick='savedata()' />
 			<input type='hidden' name='khachhang' id='khachhang' value='' />
-			<input type='button' name='print' id='print' value='Print' onclick='printdata()' disabled />
+			<!--<input type='button' name='print' id='print' value='Print' onclick='printdata()' disabled />-->
 		</center>
 		<?php		
 			}
@@ -206,7 +305,13 @@
 				<script type="text/javascript">document.location.href="index.php";</script>
 <?php
 			}
-
+			else if (isset($_GET['arg1']) && $_GET['arg1'] == 'update-pass') {
+				echo "<h4>Update password</h4>";
+				echo "<input type='password' name='newpass' id='newpass' placeholder='Password mới' /><br />";
+				echo "<input type='password' name='newpass1' id='newpass1' placeholder='Xác nhận password mới' /><br />";
+				echo "<input type='hidden' name='username' id='username' value='".$_SESSION['uname']."' />";
+				echo "<input type='button' onclick='updatePassword()' value='Update' />";
+			}
 
 			if(!isset($_SESSION['uname']) || $_SESSION['uname'] == "")
 			{

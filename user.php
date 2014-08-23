@@ -6,10 +6,20 @@
 	{
 		private $username;
 		private $password;
-		public function __construct($u,$p)
+		public function __construct($u = '',$p = '')
 		{
 			$this->username = $u;
 			$this->password = $p;
+		}
+		public function updatePassword()
+		{
+			$sql = "UPDATE user SET password = '".md5($this->password)."' WHERE username = '".$this->username."';";
+			return mysql_query($sql);
+		}
+		public static function loadAll()
+		{
+			$sql = "SELECT * FROM user";
+			return mysql_query($sql);
 		}
 		public function login()
 		{
@@ -30,7 +40,7 @@
 		}
 		public function addUser()
 		{
-			$sql = "INSERT INTO user VALUES('".$this->username."','".$this->password."');";
+			$sql = "INSERT INTO user VALUES('".$this->username."','".md5($this->password)."');";
 			$rs = mysql_query($sql);
 			if($rs)
 				return true;

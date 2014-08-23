@@ -14,18 +14,29 @@
 			else
 				echo "NG";
 			break;
+		case 'update-password':
+			require_once('user.php');
+			$obj = new user($_POST['username'],$_POST['password']);
+			$rs = $obj->updatePassword();
+			if($rs)
+				echo "ok";
+			else
+				echo "er";
+			break;
 		case 'luu-hoa-don':
 			require_once('hoadon.php');
 			$kh = $_POST['khachhang'];
 			$prices = $_POST['prices'];
 			$ids = $_POST['ids'];
+			$cks = $_POST['cks'];
 			$obj = new hoadon();
 			$obj->khachhang = $kh;
-			$parts = explode(":", $prices);
-			$part1s = explode(":", $ids);
-			for($i=0;$i < count($parts);$i ++ )
+			$price_parts = explode(":", $prices);
+			$id_parts = explode(":", $ids);
+			$discount_parts = explode(":", $cks);
+			for($i=0;$i < count($id_parts);$i ++ )
 			{
-				$obj->addChitiet($part1s[$i],$parts[$i]);
+				$obj->addChitiet($id_parts[$i],$price_parts[$i],$discount_parts[$i]);
 			}
 			$obj->save();
 			echo $obj->getLastHD();
