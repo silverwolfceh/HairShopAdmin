@@ -95,7 +95,7 @@
 		}
 		public static function displayUserSelection($rs)
 		{
-			echo "<select name='user'>";
+			echo "<select name='user' id='user'>";
 			while($r = mysql_fetch_array($rs))
 			{
 				echo "<option value='".$r['username']."'>".$r['username']."</option>";

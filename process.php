@@ -10,11 +10,21 @@
 			$obj = new user($_REQUEST['username'],$_REQUEST['password']);
 			$rs = $obj->login();
 			if($rs == true)
-				echo "OK";
+			{
+				if(md5($obj->orguname) == md5($_REQUEST['username']))
+					echo "OK";
+				else
+					echo "Good try but not luck this time ^_^ #ANBU";
+			}
 			else
 				echo "NG";
 			break;
 		case 'update-password':
+			if(!isset($_SESSION['uname']))
+			{
+				echo "Nice try but not luck! ;))";
+				die();
+			}
 			require_once('user.php');
 			$obj = new user($_POST['username'],$_POST['password']);
 			$rs = $obj->updatePassword();
@@ -29,8 +39,10 @@
 			$prices = $_POST['prices'];
 			$ids = $_POST['ids'];
 			$cks = $_POST['cks'];
+			$nguoilap = $_POST['nguoilap'];
 			$obj = new hoadon();
 			$obj->khachhang = $kh;
+			$obj->nguoilap = $nguoilap;
 			$price_parts = explode(":", $prices);
 			$id_parts = explode(":", $ids);
 			$discount_parts = explode(":", $cks);
@@ -59,7 +71,7 @@
 			$output .= "Điện thoại: ".$dienthoai. "<br /><br /><br /></center>";
 			$output .= "<table width=500px border=0>";
 			$output .= "<tr><td align='right'>Ngày lập phiếu: </td><td>".$r['ngaylap']."</td></tr>";
-			$output .= "<tr><td align='right'>Người lập phiếu: </td><td>_".$_SESSION['uname']."_</td></tr>";
+			$output .= "<tr><td align='right'>Người lập phiếu: </td><td>_".$r['nguoilap']."_</td></tr>";
 			$output .= "<tr><td colspan=2 ><br /><center><b>Chi tiết dịch vụ </b></center></td></tr>";
 			
 			$obj1 = new chitiet($mahd);

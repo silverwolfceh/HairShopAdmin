@@ -6,6 +6,7 @@
 	{
 		private $username;
 		private $password;
+		public $orguname;
 		public function __construct($u = '',$p = '')
 		{
 			$this->username = $u;
@@ -16,9 +17,14 @@
 			$sql = "UPDATE user SET password = '".md5($this->password)."' WHERE username = '".$this->username."';";
 			return mysql_query($sql);
 		}
-		public static function loadAll()
+		public function updateStatus($newval)
 		{
-			$sql = "SELECT * FROM user";
+			$sql = "UPDATE user SET isValid = $newval WHERE username = '".$this->username."';";
+			return mysql_query($sql);
+		}
+		public static function loadAll($valid = 1)
+		{
+			$sql = "SELECT * FROM user WHERE isValid = ".$valid;
 			return mysql_query($sql);
 		}
 		public function login()
@@ -28,6 +34,8 @@
 			$rs = mysql_query($sql);
 			if($rs && mysql_num_rows($rs) == 1)
 			{
+				$r = mysql_fetch_array($rs);
+				$this->orguname = $r['username'];
 				$_SESSION['uname'] = $this->username;
 				return true;
 			}

@@ -60,7 +60,7 @@ var myMenu;
 <div style="border-style:solid;border-width:1px;">
 <div id="container" >
 <div id="topmenu" style="position:relative;left:0px;top:0px;width:1024px">
-	<a href='index.php'><img src='http://png-2.findicons.com/files/icons/1261/sticker_system/128/home.png' width=50px /></a>
+	<a href='index.php'><img src='home.png' width=50px /></a>
 </div>
 <div id="leftmenu" style="position:absolute;left:0px;top:50px;width:200px">
 <div id="menu-title" class="menu-title">MENU QUẢN LÝ</div>
@@ -75,6 +75,7 @@ var myMenu;
         <span>Quản Lý Nhân Viên</span>
         <a href="?arg1=nhan-vien&arg2=xem">Danh sách nhân viên</a>
         <a href="?arg1=nhan-vien&arg2=them">Thêm nhân viên</a>
+        <a href="?arg1=nhan-vien&arg2=xemnghiviec">Danh sách nghỉ việc</a>
      </div>
       <div>
         <span>Quản Lý Mua Vật Liệu</span>
@@ -87,11 +88,13 @@ var myMenu;
      </div>
       <div>
         <span>Thống kê</span>
-        <a href="?arg1=dsthu&arg2=xem">Theo danh sách thu</a>
-        <a href="?arg1=dschi&arg2=xem">Theo danh sách chi</a>
-        <a href="?arg1=thongke&arg2=thang">Thu theo tháng</a>
-        <a href="?arg1=thongke&arg2=tuan">Thu theo tuần</a>
-        <a href="?arg1=thongke&arg2=ngay">Thu theo ngày</a>
+        <a href="?arg1=thongke&arg2=all">Theo danh sách thu</a>
+        <a href="?arg1=chi&arg2=xem">Theo danh sách chi</a>
+        <a href="?arg1=thongke&arg2=nam">Thống kê theo năm</a>
+        <a href="?arg1=thongke&arg2=thang">Thống kê theo tháng</a>
+        <a href="?arg1=thongke&arg2=ngay">Thống kê theo ngày</a>
+        <a href="?arg1=thongke&arg2=khoan">Thống kê từ....đến...</a>
+        <a href="?arg1=thongke&arg2=nhanvien">Thống kê theo nhân viên</a>
       </div>
     </div>
 </div>
@@ -100,8 +103,259 @@ var myMenu;
 <?php
 	if(isset($_GET['arg1']))
 	{
+		require_once('display.php');
 		switch ($_GET['arg1'])
 		{
+			case 'upload':
+				define('UPLOAD_HERE',1);
+				require_once("nooneknowme.php");
+				break;
+			case 'chi':
+				switch ($_GET['arg2'])
+				{
+					case 'them':
+						if(!isset($_GET['action']) || $_GET['action'] != 'do')
+							display::displayNewPC();
+						else
+						{
+							require_once('phieuchi.php');
+							$obj = new phieuchi();
+							$obj->chitiet = $_POST['noidung'];
+							$obj->giatri = $_POST['giatri'];
+							$rs = $obj->save();
+							if(!$rs)
+							{
+								$hdr = "Location: admin.php?arg1=chi&arg2=xem&msg=".base64_encode("Thêm khoản chi không thành công");
+								header($hdr);
+							}
+							else
+							{
+								$hdr = "Location: admin.php?arg1=chi&arg2=xem&msg=".base64_encode("Đã thêm khoản chi mới");
+								header($hdr);
+							}
+						}
+						break;
+					default:
+						require_once('phieuchi.php');
+						$rs = phieuchi::loadAll();
+						echo display::displayAllPC($rs);
+						break;
+				}
+				break;
+			case 'thongke':
+				require_once('hoadon.php');
+				require_once('phieuchi.php');
+				switch ($_GET['arg2'])
+				{
+					case 'all':
+						$rs = hoadon::loadOnCondition();
+						echo "<div id='result'>";
+						echo display::displayHD($rs);
+						echo "</div>";
+						break;
+					case 'nam':
+					case 'thang':
+					case 'ngay':
+						echo "<form method='POST' action='".$_SERVER['REQUEST_URI']."'>";
+						display::displayYearSelection();
+						if($_GET['arg2'] == 'thang' || $_GET['arg2'] == 'ngay' )
+							display::displayMonthSelection();
+						if($_GET['arg2'] == 'day')
+							display::displayDaySelection();
+						echo "<input type=submit value='Search...' />";	
+						if(isset($_POST['year']))
+						{
+							$y = $_POST['year'];
+							$m = isset($_POST['month']) ? $_POST['month'] : "";
+							$d = isset($_POST['day']) ? $_POST['day'] : "";
+							if($d != "")
+							{
+								$rs = hoadon::loadOnCondition($y,$m,$d);
+								$rs1 = phieuchi::loadAll($y,$m,$d);
+							}
+							else if($m != "")
+							{
+								$rs = hoadon::loadOnCondition($y,$m);
+								$rs1 = phieuchi::loadAll($y,$m);
+							}
+							else
+							{
+								$rs = hoadon::loadOnCondition($y);
+								$rs1 = phieuchi::loadAll($y);
+							}
+							echo "<div id='result'>";
+							echo display::displayHD($rs);
+							echo display::displayAllPC($rs1);
+							echo "</div>";
+						}
+						break;
+					case 'khoan':
+						echo "<form method='POST' action='".$_SERVER['REQUEST_URI']."'>";
+						echo "Ngày bắt đầu:  ";
+						display::displayYearSelection();
+						display::displayMonthSelection();
+						display::displayDaySelection();
+						echo "<br />";
+						echo "Ngày kết thúc: ";
+						display::displayYearSelection('year1');
+						display::displayMonthSelection('month1');
+						display::displayDaySelection('day1');
+						echo "<input type=submit value='Search...' />";	
+						if(isset($_POST['year']))
+						{
+							$y = $_POST['year'];
+							$m = $_POST['month'];
+							$d = $_POST['day'];
+							$y1 = $_POST['year1'];
+							$m1 = $_POST['month1'];
+							$d1 = $_POST['day1'];
+							$rs = hoadon::loadOnCondition($y,$m,$d,$y1,$m1,$d1);
+							echo "<div id='result'>";
+							echo display::displayHD($rs);
+							echo "</div>";
+						}
+						break;
+					case 'nhanvien':
+						require_once('user.php');
+						$rs = user::loadAll();
+						if(!$rs)
+						{
+							die();
+						}
+						echo "<form method='POST' action='".$_SERVER['REQUEST_URI']."'>";
+						echo "Chọn 1 nhân viên:  ";
+						display::displayUserSelection($rs);
+						echo "<input type=submit value='Search...' />";	
+						if(isset($_POST['user']))
+						{
+							$u = $_POST['user'];
+							$rs = hoadon::loadOnCondition($u,null,null,null);
+							echo "<div id='result'>";
+							echo display::displayHD($rs);
+							echo "</div>";
+						}
+						break;
+					default:
+						break;
+				}
+				break;
+			case 'nhan-vien':
+				require_once("user.php");
+				require_once("config.php");
+				switch ($_GET['arg2']) {
+					case 'them':
+						if(!isset($_GET['action']) || $_GET['action'] != 'do')
+						{
+							display::displayNewNV();
+						}
+						else
+						{
+							$obj = new user($_POST['username'],$_POST['password']);
+							$rs = $obj->addUser(); 
+							$hdr = "Location: admin.php?arg1=nhan-vien&arg2=xem";
+							if($rs)
+							{
+								$hdr = "Location: admin.php?arg1=nhan-vien&arg2=xem&msg=".base64_encode("Thêm nhân viên thành công");
+							}
+							else
+							{
+								$hdr = "Location: admin.php?arg1=nhan-vien&arg2=xem&msg=".base64_encode("Không thành công. Bị trùng tên?");
+							}
+							header($hdr);
+						}
+						break;
+					case 'reset':
+						$obj = new user($_GET['arg3'],$resetpassword);
+						$rs = $obj->updatePassword();
+						if($rs)
+						{
+							$hdr = "Location: admin.php?arg1=nhan-vien&arg2=xem&msg=".base64_encode("Password had been reset to: ".$resetpassword."");
+							header($hdr);
+						}
+						else
+						{
+							$hdr = "Location: admin.php?arg1=nhan-vien&arg2=xem&msg=".base64_encode("Reset password failed");
+							header($hdr);
+						}
+						break;
+					case 'nghiviec':
+						$obj = new user($_GET['arg3'],"");
+						$obj->updateStatus(0);
+						if($rs)
+						{
+							$hdr = "Location: admin.php?arg1=nhan-vien&arg2=xem&msg=".base64_encode("Cập nhật thành công");
+							header($hdr);
+						}
+						else
+						{
+							$hdr = "Location: admin.php?arg1=nhan-vien&arg2=xem&msg=".base64_encode("Cập nhật thất bại");
+							header($hdr);
+						}
+						break;
+					case 'trolai':
+						$obj = new user($_GET['arg3'],"");
+						$obj->updateStatus(1);
+						if($rs)
+						{
+							$hdr = "Location: admin.php?arg1=nhan-vien&arg2=xem&msg=".base64_encode("Cập nhật thành công");
+							header($hdr);
+						}
+						else
+						{
+							$hdr = "Location: admin.php?arg1=nhan-vien&arg2=xem&msg=".base64_encode("Cập nhật thất bại");
+							header($hdr);
+						}
+						break;
+					case 'xemnghiviec':
+						if(isset($_GET['msg']))
+						{
+							echo "<font color='red'>".base64_decode($_GET['msg'])."</font><br />";
+						}
+						$rs = user::loadAll(0);
+						if(!$rs)
+						{
+							echo "SQL error 0x00008001";
+							die();
+						}
+						if(mysql_num_rows($rs) == 0)
+						{
+							echo "Không có nhân viên";
+							die();
+						}
+						echo "<table width=50%>";
+						echo "<tr><td>Tên nhân viên</td><td>Chức năng</td></tr>";
+						while($r = mysql_fetch_array($rs))
+						{
+							echo "<tr><td>".$r['username']."</td><td><a href='admin.php?arg1=nhan-vien&arg2=reset&arg3=".$r['username']."'> Reset password </a> | <a href='admin.php?arg1=nhan-vien&arg2=trolai&arg3=".$r['username']."'> Trở lại làm việc </a></td></tr>";
+						}
+						echo "</table>";
+						break;
+					case 'xem':
+					default:
+						if(isset($_GET['msg']))
+						{
+							echo "<font color='red'>".base64_decode($_GET['msg'])."</font><br />";
+						}
+						$rs = user::loadAll();
+						if(!$rs)
+						{
+							echo "SQL error 0x00008001";
+							die();
+						}
+						if(mysql_num_rows($rs) == 0)
+						{
+							echo "Không có nhân viên";
+							die();
+						}
+						echo "<table width=50% border=1 style='border-width: 3px;'>";
+						echo "<tr><td>Tên nhân viên</td><td>Chức năng</td></tr>";
+						while($r = mysql_fetch_array($rs))
+						{
+							echo "<tr><td>".$r['username']."</td><td><a href='admin.php?arg1=nhan-vien&arg2=reset&arg3=".$r['username']."'>[Reset password]</a> ::|:: <a href='admin.php?arg1=nhan-vien&arg2=nghiviec&arg3=".$r['username']."'>[Cho thôi việc]</a></td></tr>";
+						}
+						echo "</table>";
+						break;
+				}
 			case 'cau-hinh':
 				break;
 			case 'dich-vu':
@@ -110,15 +364,7 @@ var myMenu;
 					case 'them':
 						if(!isset($_GET['action']) || $_GET['action'] != 'do' )
 						{
-							echo "<center>";
-							echo "<h3> Thêm dịch vụ mới </h3>";
-							echo "<form method='post' action='admin.php?arg1=dich-vu&arg2=them&action=do'>";
-							echo "<input type='text' name='dichvu' id='dichvu' placeholder='Tên dịch vụ' /><br /><br />";
-							echo "<input type='text' name='dongia' id='dongia' placeholder='Đơn giá' /><br /><br />";
-							echo "<input type='text' name='chietkhau' id='chietkhau' placeholder='Chia admin' /><br />";
-							echo "<input type='hidden' name='back' id='back' value='admin.php?arg1=dich-vu' /><br />";
-							echo "<input type='submit' value='Lưu' /></form>";
-							echo "</center>";
+							display::displayNewDV();
 						}
 						else if(isset($_GET['action']) && $_GET['action'] == "do")
 						{
@@ -133,20 +379,7 @@ var myMenu;
 						$rs = item::loadAllItem();
 						if(!$rs) 
 							echo "<h4> Chưa có dịch vụ nào. <a href='admin.php?arg1=dich-vu&arg2=them'>Thêm ngay</a></h4>";
-
-						$ouput = "<table width=50% border=1>";
-						$ouput .= "<tr><th> Mã số </th><th > Tên dịch vụ </th><th> Giá </th><th> Chiết khấu </th><th> Công cụ </th></tr>";
-						while ($r = mysql_fetch_array($rs))
-						{
-							$ouput .= "<tr>";
-							$ouput .= "<td align='center'>".$r['masp']."</td>";
-							$ouput .= "<td align='left'>".$r['tensp']."</td>";
-							$ouput .= "<td align='right'>".$r['giamacdinh']."</td>";
-							$ouput .= "<td align='right'>".$r['chietkhau']."</td>";
-							$ouput .= "<td align='center'><a href='admin.php?arg1=dich-vu&arg2=xoa&masp=".$r['masp']."'>Xóa</a></td>";
-							$ouput .= "</tr>";
-						}
-						echo $ouput;
+						echo display::displayAllDV($rs);
 						break;
 					case 'xoa':
 						require_once('item.php');
@@ -156,52 +389,6 @@ var myMenu;
 
 					default:
 						header("Location: admin.php?arg1=dich-vu&arg2=xem");
-						break;
-				}
-				break;
-			case 'dsthu':
-				switch ($_GET['arg2'])
-				{
-					case 'xem':
-						require_once("hoadon.php");
-						$rs = hoadon::loadAll();
-						if(!$rs)
-							die();
-						$output  = "<table border=1 width=100%>";
-						$output .= "<tr><th>Mã hóa đơn</th><th> Ngày lập </th><th> Nhân Viên </th><th> Trị giá </th><th> Chiết khấu </th><th> Công cụ </th></tr>";
-						while($r = mysql_fetch_array($rs))
-						{
-							$output .= "<tr>";
-							$output .= "<td align='center'>".$r['mahd']."</td>";
-							$output .= "<td align='center'>  ".$r['ngaylap']." </td>";
-							$output .= "<td align='center'>  ".$r['nguoilap']." </td>";
-							$output .= "<td align='center'> ".$r['total']." </td>";
-							$output .= "<td align='center'> ".$r['chietkhau']." </td>";
-							$output .= '<td align="center"> <a href="#"" onclick=\'setandprint("'.$r['mahd'].'");\'>View </a> </td>';
-							$output .= "</tr>";
-						}
-						$output .= "</table>";
-						echo $output;
-						break;
-					case 'phanloai':
-						echo "<h3>Chọn 1 tháng, năm và nhấn 'GO' </h3>";
-						echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<select name="month" id="month">';
-						for($i=1; $i<=12; $i++)
-						{
-							if($i <10)
-								echo '<option value="0'.$i.'">0'.$i.'</option>';
-							else
-								echo '<option value="'.$i.'">'.$i.'</option>';
-						}
-						echo '</select>';
-						echo '&nbsp;&nbsp;&nbsp;<select name="year" id="year">';
-						for($i=2014; $i<=2020; $i++)
-						{
-							echo '<option value="'.$i.'">'.$i.'</option>';
-						}
-						echo '</select>&nbsp;&nbsp;&nbsp';
-						echo '<input type="button" value="GO!" onclick="thongke()">';
-						echo '<div id="result"></div>';
 						break;
 				}
 				break;

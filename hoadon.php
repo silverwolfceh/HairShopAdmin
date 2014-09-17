@@ -10,9 +10,12 @@
 		private $chitiet_ck;
 		public $khachhang;
 		private $chietkhau;
+		public $nguoilap;
 		public function __construct($maso = -1)
 		{
 			$this->mahd = $maso;
+			if(isset($_SESSION['uname']))
+				$this->nguoilap = $_SESSION['uname'];
 		}
 		public static function loadAll()
 		{
@@ -23,6 +26,9 @@
 			elseif (func_num_args() == 1)
 			{
 				return hoadon::loadAllByCreator(func_get_arg(0));
+			}
+			elseif (func_num_args() == 2) {
+				return hoadon::loadAllByCreatorAndDate(func_get_arg(0),func_get_arg(1));
 			}
 		}
 		public static function loadOnCondition()
@@ -60,6 +66,17 @@
 		public static function loadAllByCreator($nguoilap)
 		{
 			$sql = "SELECT * FROM hoadon WHERE nguoilap = '".$nguoilap."' ORDER BY ngaylap DESC;";
+			$rs = mysql_query($sql);
+			return $rs;
+		}
+		public static function loadAllByCreatorAndDate($nguoilap,$ngaylap)
+		{
+			$sql = "";
+			if($nguoilap != "")
+				$sql = "SELECT * FROM hoadon WHERE nguoilap = '".$nguoilap."' AND ngaylap = '".$ngaylap."' ORDER BY ngaylap DESC;";
+			else
+				$sql = "SELECT * FROM hoadon WHERE ngaylap = '".$ngaylap."' ORDER BY ngaylap DESC;";
+
 			$rs = mysql_query($sql);
 			return $rs;
 		}
@@ -109,7 +126,7 @@
 				$this->mahd = 1;
 			$r = mysql_fetch_array($rs);
 			$this->mahd = $r['mahdmax'] + 1;
-			$sql = "INSERT INTO hoadon(mahd,total,chietkhau,ngaylap,nguoilap,khachhang,hople) VALUES(".$this->mahd.",0,0,'".date('Y-m-d')."','".$_SESSION['uname']."','".$this->khachhang."',1);";
+			$sql = "INSERT INTO hoadon(mahd,total,chietkhau,ngaylap,nguoilap,khachhang,hople) VALUES(".$this->mahd.",0,0,'".date('Y-m-d')."','".$this->nguoilap."','".$this->khachhang."',1);";
 			$rs = mysql_query($sql);
 			if($rs)
 			{

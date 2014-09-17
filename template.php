@@ -73,12 +73,13 @@
         ids = ids.substring(0,ids.length - 1);
         prices = prices.substring(0,prices.length - 1);
         cksps = cksps.substring(0,cksps.length - 1);
+        nguoilap = document.getElementById("user").value;
         document.getElementById("save").disabled = true;
         document.getElementById("save").value="Processing...";
         jQuery.ajax({
     		type: "POST",
     		url: "process.php",
-    		data: {'optcode': 'luu-hoa-don', 'khachhang' : kh, 'prices' : prices,'ids' : ids,'cks': cksps },
+    		data: {'optcode': 'luu-hoa-don', 'khachhang' : kh, 'prices' : prices,'ids' : ids,'cks': cksps, 'nguoilap': nguoilap },
     		async:false,
     		success: function(reponse) {
     			document.getElementById("save").value="Printing";
@@ -103,9 +104,13 @@
     				document.getElementById("loginstatus").innerHTML = "Login thành công";
     				document.location.href = "index.php";
     			}
-    			else
+    			else if(reponse.indexOf("NG") != -1)
     			{
     				document.getElementById("loginstatus").innerHTML = "Login thất bại";
+    			}
+    			else
+    			{
+    				document.getElementById("loginstatus").innerHTML = reponse;	
     			}
     				
     			
@@ -180,29 +185,40 @@
 		<center>
 <div style="border-style:solid;border-width:1px;">
 <div id="container" >
-<div id="topmenu" style="position:relative;left:0px;top:10px;width:1024px">
+<div id="topmenu" style="position:relative;left:0px;top:0px;width:1024px">
+	<?php
+	if(isset($_SESSION['uname']) && $_SESSION['uname'] == 'admin')
+		echo "<a href='admin.php'><img src='admin.png' width=50px /></a>";
+	?>
 </div>
 <div id="leftmenu" style="position:absolute;left:0px;top:50px;width:200px">
 <div id="menu-title" class="menu-title">Công Cụ</div>
 <div id="mymenu" name="mymenu" class="sdmenu">
 	 <div>
 <?php
-	if(isset($_SESSION['uname']))
+	if(1)
 	{
 ?>
         <span>Hóa đơn</span>
         <a href="?arg1=them-hoa-don">Tạo hóa đơn</a>   
         <a href="?arg1=xem-hoa-don">Danh sách hóa đơn</a>
-
-        <span>Người dùng <?php echo $_SESSION['uname']; ?></span>
+<?php
+	if(isset($_SESSION['uname']) && $_SESSION['uname'] == "admin")
+	{
+?>
+      	<span>Người dùng <?php echo $_SESSION['uname']; ?></span>
         <a href="?arg1=update-pass">Change password</a>
         <a href="?arg1=log-out">Logout</a>
-        <?php
-        	if($_SESSION['uname'] == 'admin')
-	        {
-	        	echo '<a href="admin.php">Admin</a>';
-	        }   
-	     ?>
+<?php
+	}
+	else
+	{
+?>
+		<span>Admin</span>
+        <a href="?arg1=login">Login</a>
+<?php
+	}
+?>
         
      
 <?php
@@ -227,7 +243,14 @@
 		<center>
 			<table with=50% border=0 style='color:blue;font-size:20px'>
 				<tr><td>Ngày tạo phiếu: </td><td> <?php echo date('d-m-Y'); ?> </td></tr>
-				<tr><td>Nhân viên: </td><td> <?php echo $_SESSION['uname']; ?> </td></tr>
+				<tr><td>Nhân viên: </td><td>
+				<?php
+					require_once("user.php");
+					require_once("display.php");
+					$rs = user::loadAll();
+					display::displayUserSelection($rs);
+				?>
+				</td></tr>
 			</table>
 			<center><h4> Dịch vụ sử dụng </h4></center>
 			<?php
@@ -273,30 +296,46 @@
 			}
 			else if(isset($_GET['arg1']) && $_GET['arg1'] == 'xem-hoa-don')
 			{
-				require_once("hoadon.php");
-				$rs = hoadon::loadAll($_SESSION['uname']);
-				if(!$rs)
-					die();
-				if(mysql_num_rows($rs) == 0)
+				require_once("user.php");
+				require_once("display.php");
+				$rs = user::loadAll();
+				echo "<form method='post' action='index.php?arg1=xem-hoa-don'>";
+				display::displayUserSelection($rs);
+				echo "<input type='submit' value='Xem thống kê' />";
+				echo "</form>";
+				$today = date("Y-m-d");
+				if(1)
 				{
-					echo "<font color='red'><strong>Bạn chưa có hóa đơn nào được tạo..<a href='index.php?arg1=them-hoa-don' style='text-decoration:none;'>Tạo một hóa đơn ngay</strong></font>";
-					die();
+					require_once("hoadon.php");
+					$rs = "";
+					if(isset($_POST['user']))
+						$rs = hoadon::loadAll($_POST['user'],$today);
+					else
+						$rs = hoadon::loadAll("",$today);
+					if(!$rs)
+						die();
+					if(mysql_num_rows($rs) == 0)
+					{
+						echo "<font color='red'><strong>Bạn chưa có hóa đơn nào được tạo..<a href='index.php?arg1=them-hoa-don' style='text-decoration:none;'>Tạo một hóa đơn ngay</strong></font>";
+						die();
+					}
+					$output  = "<table border=1 width=80%>";
+					$output .= "<tr><th>Mã hóa đơn</th><th> Ngày lập </th><th> Người lập </th><th> Trị giá </th><th> Chiết khấu </th><th> Công cụ </th></tr>";
+					while($r = mysql_fetch_array($rs))
+					{
+						$output .= "<tr>";
+						$output .= "<td align='center'>".$r['mahd']."</td>";
+						$output .= "<td align='center'>  ".$r['ngaylap']." </td>";
+						$output .= "<td align='center'>  ".$r['nguoilap']." </td>";
+						$output .= "<td align='center'> ".$r['total']." </td>";
+						$output .= "<td align='center'> ".$r['chietkhau']." </td>";
+						$output .= '<td align="center"> <a href="#"" onclick=\'setandprint("'.$r['mahd'].'");\'>View </a> </td>';
+						$output .= "</tr>";
+					}
+					$output .= "</table>";
+					echo $output;
 				}
-				$output  = "<table border=1 width=80%>";
-				$output .= "<tr><th>Mã hóa đơn</th><th> Ngày lập </th><th> Người lập </th><th> Trị giá </th><th> Chiết khấu </th><th> Công cụ </th></tr>";
-				while($r = mysql_fetch_array($rs))
-				{
-					$output .= "<tr>";
-					$output .= "<td align='center'>".$r['mahd']."</td>";
-					$output .= "<td align='center'>  ".$r['ngaylap']." </td>";
-					$output .= "<td align='center'>  ".$r['nguoilap']." </td>";
-					$output .= "<td align='center'> ".$r['total']." </td>";
-					$output .= "<td align='center'> ".$r['chietkhau']." </td>";
-					$output .= '<td align="center"> <a href="#"" onclick=\'setandprint("'.$r['mahd'].'");\'>View </a> </td>';
-					$output .= "</tr>";
-				}
-				$output .= "</table>";
-				echo $output;
+				
 			}
 			else if(isset($_GET['arg1']) && $_GET['arg1'] == 'log-out')
 			{
@@ -312,10 +351,8 @@
 				echo "<input type='hidden' name='username' id='username' value='".$_SESSION['uname']."' />";
 				echo "<input type='button' onclick='updatePassword()' value='Update' />";
 			}
-
-			if(!isset($_SESSION['uname']) || $_SESSION['uname'] == "")
-			{
-		?>
+			else if (isset($_GET['arg1']) && $_GET['arg1'] == 'login') {
+?>
 			<center>
 			<h3> Login to continue </h3>
 			<input type='text' name='username' id='username' placeholder='Enter username' /> <br />
