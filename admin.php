@@ -25,11 +25,13 @@ function printdata()
 	jQuery.ajax({
 		type: "POST",
 		url: "process.php",
-		data: {'optcode': 'in-hoa-don', 'mahd' : mahd},
+		data: {'optcode': 'in-hoa-don', 'mahd' : mahd, 'in': 0},
 		async:false,
 		success: function(reponse) {
-			var myWindow = window.open("", "myWindow", "width=530, height=500,resizable=no"); 
+			var myWindow = window.open("", "Print Window", "width=268, height=500,resizable=yes"); 
+			myWindow.document.write("<div style='width:260px'>");
 			myWindow.document.write(reponse);
+			myWindow.document.write("</div>");
 		}
 	});
 }
@@ -135,6 +137,20 @@ var myMenu;
 							}
 						}
 						break;
+					case 'xoa':
+						require_once('phieuchi.php');
+						$obj = new phieuchi($_GET['arg3']);
+						if($obj->remove())
+						{
+							$hdr = "Location: admin.php?arg1=chi&arg2=xem&msg=".base64_encode("Đã xóa phiếu chi #".$_GET['arg3']);
+							header($hdr);	
+						}
+						else
+						{
+							$hdr = "Location: admin.php?arg1=chi&arg2=xem&msg=".base64_encode("Không thể xóa phiếu chi #".$_GET['arg3']);
+							header($hdr);	
+						}
+						break;
 					default:
 						require_once('phieuchi.php');
 						$rs = phieuchi::loadAll();
@@ -156,12 +172,18 @@ var myMenu;
 					case 'nam':
 					case 'thang':
 					case 'ngay':
+						$y = isset($_POST['year']) ? $_POST['year'] : date('Y');
+						$m = isset($_POST['month']) ? $_POST['month'] : date('m');
+						$d = isset($_POST['day']) ? $_POST['day'] : date('d');
 						echo "<form method='POST' action='".$_SERVER['REQUEST_URI']."'>";
-						display::displayYearSelection();
+						if($_GET['arg2'] == 'ngay')
+							display::displayDaySelection('day',$d);
 						if($_GET['arg2'] == 'thang' || $_GET['arg2'] == 'ngay' )
-							display::displayMonthSelection();
-						if($_GET['arg2'] == 'day')
-							display::displayDaySelection();
+							display::displayMonthSelection('month',$m);
+						
+						display::displayYearSelection('year',$y);
+						
+						
 						echo "<input type=submit value='Search...' />";	
 						if(isset($_POST['year']))
 						{
@@ -190,28 +212,52 @@ var myMenu;
 						}
 						break;
 					case 'khoan':
+						$y = isset($_POST['year']) ? $_POST['year'] : date('Y');
+						$m = isset($_POST['month']) ? $_POST['month'] : date('m');
+						$d = isset($_POST['day']) ? $_POST['day'] : date('d');
+						$y1 = isset($_POST['year1']) ? $_POST['year1'] : date('Y');
+						$m1 = isset($_POST['month1']) ? $_POST['month1'] : date('m');
+						$d1 = isset($_POST['day1']) ? $_POST['day1'] : date('d');
 						echo "<form method='POST' action='".$_SERVER['REQUEST_URI']."'>";
-						echo "Ngày bắt đầu:  ";
-						display::displayYearSelection();
-						display::displayMonthSelection();
-						display::displayDaySelection();
+						echo "Ngày bắt đầu:  &nbsp;";
+						display::displayDaySelection('day',$d);
+						display::displayMonthSelection('month',$m);
+						display::displayYearSelection('year',$y);
 						echo "<br />";
 						echo "Ngày kết thúc: ";
-						display::displayYearSelection('year1');
-						display::displayMonthSelection('month1');
-						display::displayDaySelection('day1');
+						display::displayDaySelection('day1',$d1);
+						display::displayMonthSelection('month1',$m1);
+						display::displayYearSelection('year1',$y1);
 						echo "<input type=submit value='Search...' />";	
 						if(isset($_POST['year']))
 						{
-							$y = $_POST['year'];
-							$m = $_POST['month'];
-							$d = $_POST['day'];
-							$y1 = $_POST['year1'];
-							$m1 = $_POST['month1'];
-							$d1 = $_POST['day1'];
+							
 							$rs = hoadon::loadOnCondition($y,$m,$d,$y1,$m1,$d1);
+							echo "<h3> Tổng hợp hóa đơn (thu) </h3>";
 							echo "<div id='result'>";
 							echo display::displayHD($rs);
+							echo "</div>";
+							echo "<div id='userstat'>";
+							echo "<h3> Tổng hợp tiền công </h3>";
+							echo "<table width=100% border=1>";
+							echo "<tr><th>Tên nhân viên</th><th>Tổng thu</th><th>Tống chiết khấu</th><th>Tiền công</th></tr>";
+							require_once('user.php');
+							$users = user::loadAll();
+							while($r = mysql_fetch_array($users))
+							{
+								$nguoilap = $r['username'];
+								if($nguoilap == 'admin')
+									continue;
+								$dmy = $y."-".$m."-".$d;
+								$dmy1 = $y1."-".$m1."-".$d1;
+								$info = hoadon::loadAllByCreatorAndPeriod($nguoilap,$dmy,$dmy1);
+								$r1 = mysql_fetch_array($info);
+								$tiencong = ($r1['stotal'] - $r1['schietkhau']) / 2;
+								echo "<tr align='center'><td>".$nguoilap."</td><td>".$r1['stotal']."</td><td>".$r1['schietkhau']."</td><td>".$tiencong."</td></tr>";
+
+							}
+							echo "</table>";
+							echo "<ul><li style='color:red;font-weight:bold'>Tiền công = (tổng thu - tổng chiết khấu) / 2 </li></ul>";
 							echo "</div>";
 						}
 						break;
@@ -373,6 +419,20 @@ var myMenu;
 							$obj->add($_POST['dichvu'],$_POST['dongia'],$_POST['chietkhau']);
 							header("Location: admin.php?arg1=dich-vu&arg2=xem");
 						}
+						break;
+					case 'sua':
+						require_once('item.php');
+						if(isset($_GET['action']))
+						{
+							$madv = $_POST['madv'];
+							$obj = new item($madv);
+							$obj->update($_POST['dichvu'],$_POST['dongia'],$_POST['chietkhau']);
+							header("Location: admin.php?arg1=dich-vu&arg2=xem");
+							return;
+						}
+						$obj = new item($_GET['masp']);
+						$rs = $obj->loadItem();
+						display::displayDV($rs);
 						break;
 					case 'xem':
 						require_once('item.php');

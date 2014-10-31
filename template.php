@@ -84,7 +84,7 @@
     		success: function(reponse) {
     			document.getElementById("save").value="Printing";
     			mahd = reponse;
-    			printdata();
+    			printdata(1);
     			document.location.href="index.php?arg1=xem-hoa-don"
     		}
     	});
@@ -123,16 +123,20 @@
 		mahd = ma;
 		printdata();
 	}
-	function printdata()
+	function printdata(a)
 	{
+		inngay = typeof a !== 'undefined' ? a : 0;
 		jQuery.ajax({
     		type: "POST",
     		url: "process.php",
-    		data: {'optcode': 'in-hoa-don', 'mahd' : mahd},
+    		data: {'optcode': 'in-hoa-don', 'mahd' : mahd, 'in': inngay},
     		async:false,
     		success: function(reponse) {
-    			var myWindow = window.open("index.php?in-hoa-don", "myWindow", "width=530, height=500,resizable=no"); 
-    			myWindow.document.write(reponse);
+    				//document.getElementById('debug').innerHTML = "<xmp>"+reponse+"</xmp>";
+					var myWindow = window.open("ABOUT", "Print Window", ""); 
+					myWindow.document.write("<div style='font-size:400%'>");
+					myWindow.document.write(reponse);
+					myWindow.document.write("</div>");
     		}
     	});
 	}
@@ -201,7 +205,7 @@
 ?>
         <span>Hóa đơn</span>
         <a href="?arg1=them-hoa-don">Tạo hóa đơn</a>   
-        <a href="?arg1=xem-hoa-don">Danh sách hóa đơn</a>
+        <a href="?arg1=xem-hoa-don">Thống kê trong ngày</a>
 <?php
 	if(isset($_SESSION['uname']) && $_SESSION['uname'] == "admin")
 	{
@@ -235,6 +239,7 @@
 </div>
 <div id="content" style="position:absolute;left:260px;top:80px;width:1024px;float:left;text-align:left;border-style:solid;border-width:2px;min-height:750px">
 		<?php
+
 			if(isset($_GET['arg1']) && $_GET['arg1'] == 'them-hoa-don' )
 			{
 		?>
@@ -254,6 +259,7 @@
 			</table>
 			<center><h4> Dịch vụ sử dụng </h4></center>
 			<?php
+				$allowsave = false;
 				if(defined("_USE_COMBOBOX"))
 				{
 					require_once('item.php');
@@ -285,10 +291,13 @@
 					}
 					echo "</table>";
 					echo "<br />";
+					if(mysql_num_rows($rs) > 0)
+						$allowsave = true;
 				}
-				
+				if($allowsave)	
+					echo "<input type='button' name='save' id='save' value='Lưu và In' onclick='savedata()' />";
 			?>
-			<input type='button' name='save' id='save' value='Lưu và In' onclick='savedata()' />
+			
 			<input type='hidden' name='khachhang' id='khachhang' value='' />
 			<!--<input type='button' name='print' id='print' value='Print' onclick='printdata()' disabled />-->
 		</center>
@@ -298,12 +307,9 @@
 			{
 				require_once("user.php");
 				require_once("display.php");
-				$rs = user::loadAll();
-				echo "<form method='post' action='index.php?arg1=xem-hoa-don'>";
-				display::displayUserSelection($rs);
-				echo "<input type='submit' value='Xem thống kê' />";
-				echo "</form>";
+				
 				$today = date("Y-m-d");
+				echo "<h3>Thống kê thu nhập ngày: ".date("d-m-Y")."</h3>";
 				if(1)
 				{
 					require_once("hoadon.php");
@@ -319,21 +325,127 @@
 						echo "<font color='red'><strong>Bạn chưa có hóa đơn nào được tạo..<a href='index.php?arg1=them-hoa-don' style='text-decoration:none;'>Tạo một hóa đơn ngay</strong></font>";
 						die();
 					}
-					$output  = "<table border=1 width=80%>";
-					$output .= "<tr><th>Mã hóa đơn</th><th> Ngày lập </th><th> Người lập </th><th> Trị giá </th><th> Chiết khấu </th><th> Công cụ </th></tr>";
-					while($r = mysql_fetch_array($rs))
+					$output  = "<table border=1 width=100%>";
+					if(!isset($_POST['user']))
 					{
-						$output .= "<tr>";
-						$output .= "<td align='center'>".$r['mahd']."</td>";
-						$output .= "<td align='center'>  ".$r['ngaylap']." </td>";
-						$output .= "<td align='center'>  ".$r['nguoilap']." </td>";
-						$output .= "<td align='center'> ".$r['total']." </td>";
-						$output .= "<td align='center'> ".$r['chietkhau']." </td>";
-						$output .= '<td align="center"> <a href="#"" onclick=\'setandprint("'.$r['mahd'].'");\'>View </a> </td>';
-						$output .= "</tr>";
+						// Lay danh sach nguoi lap va gia tri
+						$users = null;
+						$prices = null;
+						$hdids = null;
+						while($r = mysql_fetch_array($rs))
+						{
+							if($r['nguoilap'] == 'admin')
+								continue;
+							$users[] = $r['nguoilap'];
+							$prices[] = $r['total'];
+							$hdids[] = $r['mahd'];
+						}
+
+						require_once("user.php");
+						$rs1 = user::loadAll();
+						// Special calculation
+						$tbl = null;
+						$auser = null;
+						$name = $users[0];
+						$startidx = 0;
+						// Phan so tien moi nguoi kiem duoc ra cac mang khac nhau, key la nguoi lap
+						while(1)
+						{
+							$auser = null;
+							for($i = $startidx; $i < count($users); $i ++)
+							{
+								if($name == $users[$i])
+								{
+									$auser[] = $prices[$i];
+								}
+								else
+								{
+									$startidx = $i;
+									break;
+								}
+							}
+							$tbl[$name] = $auser;
+
+							if($i == count($users))
+								break;
+							else
+								$name = $users[$i];
+						}
+						// Bo sung "" cho cac mang con thieu phan tu, vi du nguoi A lam duoc 5 hoa don nhung nguoi B chi lam duoc 2 hoa don, 3 hoa don kia se duoc dien ""
+						$max = 0;
+						$keys = array_keys($tbl);
+						for($i=0;$i<count($keys);$i++)
+						{
+							if($max < count($tbl[$keys[$i]]))
+								$max = count($tbl[$keys[$i]]);
+						}
+						for($i = 0; $i < count($keys); $i ++)
+						{
+							while($max > count($tbl[$keys[$i]]))
+								$tbl[$keys[$i]][] = "";
+						}
+						// Bo sung nhung nguoi chua lam duoc hoa don nao voi du lieu la ""
+						while ($r1 = mysql_fetch_array($rs1))
+						{
+							if($r1['username'] == 'admin')
+								continue;
+							if(!array_key_exists($r1['username'],$tbl))
+							{
+								for($i=0;$i<$max;$i++)
+								{
+									$tbl[$r1['username']][] = "";
+								}
+							}
+						}
+						// Hien thi, moi o tren dong lay tu 1 bang tuong ung voi user
+						$haveheader = false;
+						for($i = 0; $i < $max; $i ++)
+						{
+							$keys = array_keys($tbl);
+							if(!$haveheader)
+							{
+
+								$output .= "<tr>";
+								
+								for($j = 0; $j < count($keys); $j ++)
+								{
+									$output .= "<th>".$keys[$j]."</th>";
+								}
+								$output .= "</tr>";
+								$haveheader = true;
+							}
+							$output .= "<tr>";
+							for($j = 0; $j < count($keys); $j ++)
+							{
+								$output .= "<td>".$tbl[$keys[$j]][$i]."</td>";
+							}
+							$output .= "</tr>";
+						}
+					}
+					else
+					{
+						$output .= "<tr><th>Mã hóa đơn</th><th> Ngày lập </th><th> Người lập </th><th> Trị giá </th><th> Chiết khấu </th><th> Công cụ </th></tr>";
+						while($r = mysql_fetch_array($rs))
+						{
+							$output .= "<tr>";
+							$output .= "<td align='center'>".$r['mahd']."</td>";
+							$output .= "<td align='center'>  ".$r['ngaylap']." </td>";
+							$output .= "<td align='center'>  ".$r['nguoilap']." </td>";
+							$output .= "<td align='center'> ".$r['total']." </td>";
+							$output .= "<td align='center'> ".$r['chietkhau']." </td>";
+							$output .= '<td align="center"> <a href="#"" onclick=\'setandprint("'.$r['mahd'].'");\'>View </a> </td>';
+							$output .= "</tr>";
+						}
 					}
 					$output .= "</table>";
+					$output .= "<hr />";					
 					echo $output;
+					$rs = user::loadAll();
+					echo "<form method='post' action='index.php?arg1=xem-hoa-don'>";
+					display::displayUserSelection($rs);
+					echo "<input type='submit' value='Xem thống kê theo nhân viên' />";
+					echo "</form>";
+					echo "<div id='debug'></div>";
 				}
 				
 			}

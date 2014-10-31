@@ -24,7 +24,7 @@
 		}
 		public static function loadAll($valid = 1)
 		{
-			$sql = "SELECT * FROM user WHERE isValid = ".$valid;
+			$sql = "SELECT * FROM user WHERE isValid = ".$valid." ORDER BY username DESC";
 			return mysql_query($sql);
 		}
 		public function login()
@@ -48,7 +48,7 @@
 		}
 		public function addUser()
 		{
-			$sql = "INSERT INTO user VALUES('".$this->username."','".md5($this->password)."');";
+			$sql = "INSERT INTO user VALUES('".$this->username."','".md5($this->password)."',1);";
 			$rs = mysql_query($sql);
 			if($rs)
 				return true;

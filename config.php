@@ -1,7 +1,7 @@
 <?php
-	$tentiem = 'Beauty Salon Tân Bình';
-	$diachi  = '123, Trường Chinh, Tân Bình, Hồ Chí Minh';
-	$dienthoai = '0987654321';
+	$tentiem = 'Hair Salon Quan';
+	$diachi  = '123, Nguyễn Văn Quá, P.1, Q. 12';
+	$dienthoai = '0987.654.321';
     $dbhost='localhost';
     $dbuser='root';
     $dbpass='';

@@ -73,10 +73,16 @@
 		{
 			$sql = "";
 			if($nguoilap != "")
-				$sql = "SELECT * FROM hoadon WHERE nguoilap = '".$nguoilap."' AND ngaylap = '".$ngaylap."' ORDER BY ngaylap DESC;";
+				$sql = "SELECT * FROM hoadon WHERE nguoilap = '".$nguoilap."' AND ngaylap = '".$ngaylap."' ORDER BY nguoilap DESC;";
 			else
-				$sql = "SELECT * FROM hoadon WHERE ngaylap = '".$ngaylap."' ORDER BY ngaylap DESC;";
+				$sql = "SELECT * FROM hoadon WHERE ngaylap = '".$ngaylap."' ORDER BY nguoilap DESC;";
 
+			$rs = mysql_query($sql);
+			return $rs;
+		}
+		public static function loadAllByCreatorAndPeriod($nguoilap,$dmy1,$dmy2)
+		{
+			$sql = "SELECT sum(total) as stotal, sum(chietkhau) as schietkhau FROM hoadon WHERE nguoilap = '".$nguoilap."' AND ngaylap >= '".$dmy1."' AND ngaylap <= '".$dmy2."' GROUP by nguoilap";
 			$rs = mysql_query($sql);
 			return $rs;
 		}

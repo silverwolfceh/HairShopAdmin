@@ -6,8 +6,10 @@
 		private $mahd;
 		public $chitiet;
 		public $giatri;
+		public $loai;
 		public function __construct($maso = -1)
 		{
+			$this->loai = "Tiem"; //Nau an
 			$this->mahd = $maso;
 		}
 		public static function loadAll()
@@ -71,13 +73,19 @@
 				$this->mahd = 1;
 			$r = mysql_fetch_array($rs);
 			$this->mahd = $r['mahdmax'] + 1;
-			$sql = "INSERT INTO phieuchi(maso,ngaylap,noidung,giatri) VALUES(".$this->mahd.",'".date('Y-m-d')."','".$this->chitiet."',".$this->giatri.");";
+			$sql = "INSERT INTO phieuchi(maso,ngaylap,noidung,giatri,loai) VALUES(".$this->mahd.",'".date('Y-m-d')."','".$this->chitiet."',".$this->giatri.",'".$this->loai."');";
 			$rs = mysql_query($sql);
 			return $rs;
 		}
 		public function load()
 		{
 			$sql = "SELECT * FROM phieuchi WHERE maso = ".$this->mahd.";";
+			$rs = mysql_query($sql);
+			return $rs;
+		}
+		public function remove()
+		{
+			$sql = "DELETE FROM phieuchi WHERE maso = ".$this->mahd.";";
 			$rs = mysql_query($sql);
 			return $rs;
 		}

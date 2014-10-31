@@ -22,6 +22,16 @@
 		{
 			
 		}
+		public function update($tensp,$giamacdinh = "",$chietkhau = "")
+		{
+			$sql = "UPDATE product SET tensp = '".$tensp."' ";
+			if($giamacdinh != "")
+				$sql.= ",giamacdinh =".$giamacdinh." ";
+			if($chietkhau != "")
+				$sql.= ",chietkhau =".$chietkhau." ";
+			$sql.= "WHERE masp =".$this->masp;
+			mysql_query($sql);
+		}
 		public function delete()
 		{
 			$sql = "UPDATE product SET isValid = 0 WHERE masp = ".$this->masp;
@@ -38,7 +48,7 @@
 		}
 		public function loadItem()
 		{
-			$sql = 'SELECT * FROM product WHERE masp = '.$this->masp;
+			$sql = "SELECT * FROM product WHERE masp = ".$this->masp;
 			$rs = mysql_query($sql);
 			return $rs;
 		}
