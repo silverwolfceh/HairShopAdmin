@@ -1,26 +1,30 @@
 <?php
 	@session_start();
 	require_once("config.php");
+	require_once("datamodel.php");
 	error_reporting(E_ALL ^ E_DEPRECATED);
-	class user
+	class user extends  DataModel
 	{
 		private $username;
 		private $password;
 		public $orguname;
 		public function __construct($u = '',$p = '')
 		{
+			parent::__construct("user");
 			$this->username = $u;
 			$this->password = $p;
 		}
 		public function updatePassword()
 		{
-			$sql = "UPDATE user SET password = '".md5($this->password)."' WHERE username = '".$this->username."';";
-			return mysql_query($sql);
+			$val = "password = '".md5($this->password)."'";
+			$cond = "username = '".$this->username."'";
+			return $this->update($val,$cond);
 		}
 		public function updateStatus($newval)
 		{
-			$sql = "UPDATE user SET isValid = $newval WHERE username = '".$this->username."';";
-			return mysql_query($sql);
+			$val = "isValid = $newval";
+			$cond = "username = '".$this->username."'";
+			return $this->update($val,$cond);
 		}
 		public static function loadAll($valid = 1)
 		{
@@ -29,12 +33,11 @@
 		}
 		public function login()
 		{
-			$sql = "SELECT * FROM user WHERE username = '".$this->username."' AND password = '".md5($this->password)."'";
-			//echo $sql;
-			$rs = mysql_query($sql);
-			if($rs && mysql_num_rows($rs) == 1)
+			$cond = "WHERE username = '".$this->username."' AND password = '".md5($this->password)."'";
+			$this->selectAll($cond);
+			if(!$this->has_error && $this->num_row == 1)
 			{
-				$r = mysql_fetch_array($rs);
+				$r = mysql_fetch_array($this->last_data);
 				$this->orguname = $r['username'];
 				$_SESSION['uname'] = $this->username;
 				return true;

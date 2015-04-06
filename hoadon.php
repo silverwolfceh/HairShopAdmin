@@ -9,6 +9,7 @@
 		private $chitiet;
 		private $chitiet_ck;
 		public $khachhang;
+		public $sodt;
 		private $chietkhau;
 		public $nguoilap;
 		public function __construct($maso = -1)

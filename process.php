@@ -35,22 +35,28 @@
 			break;
 		case 'luu-hoa-don':
 			require_once('hoadon.php');
+			require_once('customer.php');
 			$kh = $_POST['khachhang'];
+			$sodt = $_POST['sodt'];
 			$prices = $_POST['prices'];
 			$ids = $_POST['ids'];
 			$cks = $_POST['cks'];
 			$nguoilap = $_POST['nguoilap'];
 			$obj = new hoadon();
-			$obj->khachhang = $kh;
+			$obj->khachhang = $sodt; //id of customer is cellphone
 			$obj->nguoilap = $nguoilap;
 			$price_parts = explode(":", $prices);
 			$id_parts = explode(":", $ids);
 			$discount_parts = explode(":", $cks);
+			$dichvusd = "";
 			for($i=0;$i < count($id_parts);$i ++ )
 			{
 				$obj->addChitiet($id_parts[$i],$price_parts[$i],$discount_parts[$i]);
+				$dichvusd .= $id_parts[$i].",";
 			}
 			$obj->save();
+			$cus = new customer($sodt);
+			$cus->addUpdateCustomer($sodt,$kh,$dichvusd);
 			echo $obj->getLastHD();
 			break;
 		case 'in-hoa-don':

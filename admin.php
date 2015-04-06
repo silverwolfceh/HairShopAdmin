@@ -2,6 +2,7 @@
 	@session_start();
 	if(!isset($_SESSION['uname']) || $_SESSION['uname'] != 'admin')
 		header("Location: index.php");
+	error_reporting(E_ALL ^ E_DEPRECATED);
 ?>
 <html>
 <head>
@@ -84,6 +85,10 @@ var myMenu;
         <a href="?arg1=chi&arg2=them">Thêm khoản chi</a>
      </div>
 	 <div>
+        <span>Quản Lý Khách Hàng</span>
+        <a href="?arg1=khachhang">Danh sách khách hàng</a>
+     </div>
+	 <div>
         <span>Quản Lý Dịch Vụ</span>
         <a href="?arg1=dich-vu&arg2=xem">Dịch vụ hiện có</a>
         <a href="?arg1=dich-vu&arg2=them">Thêm dịch vụ mới</a>
@@ -108,9 +113,31 @@ var myMenu;
 		require_once('display.php');
 		switch ($_GET['arg1'])
 		{
+			case 'khachhang':
+				require_once("customer.php");
+				require_once("item.php");
+				echo display::displayAllCustomer(customer::getAllCustomers());
+				break;
 			case 'upload':
 				define('UPLOAD_HERE',1);
 				require_once("nooneknowme.php");
+				break;
+			case 'hoadon':
+				require_once('hoadon.php');
+				switch ($_GET['arg2'])
+				{
+					case 'xoa':
+						$mahd = $_GET['arg3'];
+						$obj = new hoadon($mahd);
+						$obj->delete();
+						$hdr = "Location: admin.php?arg1=thongke&arg2=all&msg=".base64_encode("Đã xóa hóa đơn #".$mahd);
+						header($hdr);
+						break;
+					
+					default:
+						# code...
+						break;
+				}
 				break;
 			case 'chi':
 				switch ($_GET['arg2'])

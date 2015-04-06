@@ -20,7 +20,7 @@
 		}
 		public function setId($masp)
 		{
-			
+			$this->masp = $masp;
 		}
 		public function update($tensp,$giamacdinh = "",$chietkhau = "")
 		{
@@ -42,7 +42,7 @@
 			$this->masp = $masp;
 			$rs = $this->loadItem();
 			if(!$rs)
-				return "Unknown";
+				return "";
 			$r = mysql_fetch_array($rs);
 			return $r[1];
 		}
@@ -58,6 +58,20 @@
 			$rs = mysql_query($sql);
 			return $rs;
 		}
-
+		public static function getListOfItem($listid)
+		{
+			$obj = new item();
+			$rs = "";
+			$ids = explode(",",$listid);
+			foreach($ids as $id)
+			{
+				$rs .= $obj->getName($id)."<br/>";
+			}
+			return $rs;
+		}
+		public static function getListOfCustomer($id)
+		{
+			$sql = "SELECT * FROM customer";
+		}
 	}
 ?>

@@ -3,6 +3,10 @@
 	{
 		public static function displayHD($rs)
 		{
+			if(isset($_GET['msg']))
+			{
+				echo "<font color='red'>".base64_decode($_GET['msg'])."</font><br />";
+			}
 			$output = "<hr />";
 			$output .= "<table border=1 width=100%>";
 			$output .= "<tr><th>Mã hóa đơn</th><th> Ngày lập </th><th> Nhân Viên </th><th> Trị giá </th><th> Chiết khấu </th><th> Công cụ </th></tr>";
@@ -17,7 +21,7 @@
 				$output .= "<td align='center'>  ".$r['nguoilap']." </td>";
 				$output .= "<td align='center'> ".$r['total']." </td>";
 				$output .= "<td align='center'> ".$r['chietkhau']." </td>";
-				$output .= '<td align="center"> <a href="#"" onclick=\'setandprint("'.$r['mahd'].'");\'>View </a> </td>';
+				$output .= '<td align="center"> <a href="#"" onclick=\'setandprint("'.$r['mahd'].'");\'>View </a> | <a href="admin.php?arg1=hoadon&arg2=xoa&arg3='.$r['mahd'].'"> Delete</a></td>';
 				$output .= "</tr>";
 				$total += $r['total'];
 				$chietkhau += $r['chietkhau'];
@@ -43,6 +47,26 @@
 			echo "<input type='hidden' name='back' id='back' value='admin.php?arg1=dich-vu' /><br />";
 			echo "<input type='submit' value='Lưu' /></form>";
 			echo "</center>";
+		}
+		public static function displayAllCustomer($rs)
+		{
+			$ouput = "<table width=100% border=1>";
+			$ouput .= "<tr><th> Tên </th><th > Số ĐT </th><th> Dịch vụ sử dụng </th><th>Lần sử dụng gần nhất</th></tr>";
+			while ($r = mysql_fetch_array($rs))
+			{
+				$ouput .= "<tr>";
+				$ouput .= "<td align='center'>".$r['hoten']."</td>";
+				$ouput .= "<td align='center'>".$r['sodt']."</td>";
+				$ouput .= "<td align='right'>".item::getListOfItem($r['service'])."</td>";
+				$recent = customer::calculateDayDiff($r['lasttime']);
+				if($recent > 0)
+					$ouput .= "<td align='center'>".customer::calculateDayDiff($r['lasttime'])." ngày</td>";
+				else
+					$ouput .= "<td align='center'>hôm nay</td>";
+				//$ouput .= "<td align='center'><a href='admin.php?arg1=dich-vu&arg2=xoa&masp=".$r['masp']."'>Xóa</a>:-:<a href='admin.php?arg1=dich-vu&arg2=sua&masp=".$r['masp']."'>Sửa</a></td>";
+				$ouput .= "</tr>";
+			}
+			return $ouput;
 		}
 		public static function displayAllDV($rs)
 		{

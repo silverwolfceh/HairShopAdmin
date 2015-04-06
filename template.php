@@ -57,6 +57,7 @@
 		var prices = "";
 		var cksps = "";
 		var kh = "";
+		var sdt = "";
 		for (var i = 0, l = rows.length; i < l; i++)
 		{
         	if (rows[i].checked)
@@ -76,10 +77,12 @@
         nguoilap = document.getElementById("user").value;
         document.getElementById("save").disabled = true;
         document.getElementById("save").value="Processing...";
+		kh = document.getElementById("khten").value;
+		sdt = document.getElementById("khdt").value;
         jQuery.ajax({
     		type: "POST",
     		url: "process.php",
-    		data: {'optcode': 'luu-hoa-don', 'khachhang' : kh, 'prices' : prices,'ids' : ids,'cks': cksps, 'nguoilap': nguoilap },
+    		data: {'optcode': 'luu-hoa-don', 'khachhang' : kh, 'sodt': sdt, 'prices' : prices,'ids' : ids,'cks': cksps, 'nguoilap': nguoilap },
     		async:false,
     		success: function(reponse) {
     			document.getElementById("save").value="Printing";
@@ -256,6 +259,8 @@
 					display::displayUserSelection($rs);
 				?>
 				</td></tr>
+				<tr><td>Tên KH: </td><td> <input type='text' name='khten' id='khten' /></td></tr>
+				<tr><td>Số ĐT KH: </td><td> <input type='text' name='khdt' id='khdt' /></td></tr>
 			</table>
 			<center><h4> Dịch vụ sử dụng </h4></center>
 			<?php
